@@ -1,0 +1,80 @@
+body {
+  font-family: "JetBrains Mono", monospace;
+  margin: 0;
+  height: 100vh;
+}
+
+.messageBox {
+  margin-bottom: 10px;
+}
+
+.app-info {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.header{
+  margin-bottom: 20px;
+}
+#terminal {
+  /* disp lay: flex; */
+  flex-direction: column;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#output {
+  flex: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+#input-form,
+#username-form {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.prompt {
+  margin-right: 5px;
+}
+
+input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+a {
+  text-decoration: underline;
+}
+ 
+
+.pre-container {
+  display: flex;
+  flex-direction: row;
+  width: fit-content; 
+}
+
+#line-numbers {
+  background-color: #0000001e;
+  color: #666;
+  padding: 5px 10px;
+  text-align: right;
+  border-right: 1px solid #3a3a3a;
+  font-family: monospace;
+  white-space: pre;
+  user-select: none;
+}
+
+pre {
+  flex-grow: 1;
+  padding: 5px;
+  white-space: pre;
+  font-family: monospace;
+  min-height: 100px; 
+}

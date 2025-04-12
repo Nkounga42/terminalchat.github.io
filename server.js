@@ -10,7 +10,7 @@ const server = app.listen(3000, '192.168.1.78', () => {
 
 const wss = new WebSocket.Server({ server });
 
-let messages = []; // 🔥 Historique en mémoire
+let messages = []; //Historique en mémoire
 
 wss.on('connection', ws => {
   ws.id = uuidv4();
@@ -51,10 +51,10 @@ wss.on('connection', ws => {
   });
 });
 
-// 📦 Route API pour récupérer les messages
-app.get('/messages/json', (req, res) => {
+//Route API pour récupérer les messages
+app.get('/Api/messages/json', (req, res) => {
   res.json(messages);
 });
 
-// 📂 Sert les fichiers HTML/CSS/JS
+//Sert les fichiers HTML/CSS/JS
 app.use(express.static(__dirname));
