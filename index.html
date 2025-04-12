@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Terminal Chat</title>
+    <style>
+      body {
+        background-color: #1e1e1e;
+        color: #33ff33;
+        font-family: "Courier New", Courier, monospace;
+        margin: 0;
+        height: 100vh;
+      }
+
+      #terminal {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      #output {
+        flex: 1;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      #input-form,
+      #username-form {
+        display: flex;
+        align-items: center;
+      }
+
+      .prompt {
+        color: #00ff00;
+        margin-right: 5px;
+      }
+
+      input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        color: #33ff33;
+        font-family: inherit;
+        font-size: 1rem;
+      }
+
+      #input-form,
+      #username-form {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal">
+      <div id="output"></div>
+
+      <!-- Formulaire d'identifiant -->
+      <form id="username-form">
+        <span class="prompt">Nom :</span>
+        <input
+          type="text"
+          id="username"
+          autocomplete="off"
+          placeholder="Entrez votre nom..."
+        />
+      </form>
+
+      <!-- Formulaire de chat -->
+      <form id="input-form" style="display: none">
+        <span class="prompt">> </span>
+        <input
+          type="text"
+          id="input"
+          autocomplete="off"
+          placeholder="Tapez un message..."
+        />
+      </form>
+    </div>
+
+    <script>
+      let username = "";
+      const ws = new WebSocket("ws://192.168.1.78:3000");
+
+      const usernameForm = document.getElementById("username-form");
+      const usernameInput = document.getElementById("username");
+      const inputForm = document.getElementById("input-form");
+      const input = document.getElementById("input");
+      const output = document.getElementById("output");
+
+      // 🔁 Chargement de l'historique au démarrage
+      fetch('/messages')
+        .then(res => res.json())
+        .then(data => {
+          data.forEach(msg => {
+            if (msg.type === 'message') {
+              printLine(`>>> ${msg.from} ${msg.sendingTime || ''} >`);
+              printLine(`    ${msg.content}`);
+            }
+          });
+        })
+        .catch(err => {
+          console.error("Erreur lors du chargement de l'historique :", err);
+        });
+
+      // 🔁 Réception des messages en temps réel
+      ws.addEventListener("message", async (event) => {
+        const text = event.data instanceof Blob ? await event.data.text() : event.data;
+        try {
+          const msg = JSON.parse(text);
+          if (msg.type === 'message') {
+            printLine(`>>> ${msg.from} ${msg.sendingTime || ''} >`);
+            printLine(`    ${msg.content}`);
+          }
+        } catch (e) {
+          console.error("Erreur de parsing côté client :", text);
+        }
+      });
+
+      ws.addEventListener("open", () => {
+        if (username) {
+          ws.send(JSON.stringify({ type: "setUsername", username }));
+        }
+      });
+
+      // ➕ Soumission du nom d'utilisateur
+      usernameForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (usernameInput.value.trim() === "") return;
+
+        username = usernameInput.value.trim();
+        ws.send(JSON.stringify({ type: "setUsername", username }));
+
+        printLine(`>>> Bienvenue, ${username} !`);
+        printLine(``);
+
+        usernameForm.style.display = "none";
+        inputForm.style.display = "flex";
+        input.focus();
+      });
+
+      // ➤ Envoi d’un message
+      inputForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value.trim() === "") return;
+
+        const now = new Date();
+        const formattedDate = now.toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+
+        const message = {
+          type: "message",
+          content: input.value,
+          sendingTime: formattedDate
+        };
+
+        ws.send(JSON.stringify(message));
+        input.value = "";
+      });
+
+      function printLine(text) {
+        const line = document.createElement("div");
+        line.textContent = text;
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
