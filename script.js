@@ -69,7 +69,8 @@ function getUserColor(username) {
 
 // Fonction pour détecter et transformer les URLs en liens
 function linkify(text) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g || /(www\.[^\s]+)/g;
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
   return text.replace(urlRegex, (url) => {
     return `<a href="${url}" target="_blank">${url}</a>`;
   });
@@ -107,7 +108,7 @@ ws.addEventListener("message", async (event) => {
       printUserMessage(msg.from, msg.content, msg.sendingTime);
     }
   } catch (e) {
-    console.error("Erreur de parsing côté client :", text);
+    console.error("Erreur de parsing côté client :",e,  text);
   }
 });
 
@@ -219,16 +220,34 @@ function printUserMessage(user, message, time) {
   if (!hasHTML(message)) {
     messageContent = linkify(message);
     messageBox = userSpan + timePart + `<div class='message-content'>${messageContent}</div>`;
-  } else { 
-    messageBox = userSpan + timePart + `<div class='pre-container'><div id="line-numbers">1</div><pre>${prettifyHTML(messageContent)}</pre></div>`;
+  } else {  
+    messageContent =prettifyHTML(message)  ; 
+    messageBox = userSpan + timePart + `<div class='pre-container'><div id="line-numbers">1</div><pre>${escapeHTML(messageContent)}</pre></div>`;
   }
   
   messageBoxElement.innerHTML = messageBox;
   messageBoxElement.className = "messageBox";
+  
   output.appendChild(messageBoxElement);
+  updateLineNumbers()
 }
 
- 
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")  // doit être échappé en premier !
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Exemple d'utilisation :
+const html = '<span class="t$erminal-time"> {time} </span>';
+const escaped = escapeHTML(html);
+
+// Affiche dans un <pre>
+document.querySelector('pre').textContent = escaped;
+
 function showError(message) {
   const terminal = document.getElementById("terminal");
 
@@ -277,7 +296,7 @@ function updateLineNumbers() {
       
       // Générer les numéros de ligne
       let numbersText = '';
-      for (let i = 1; i <= lineCount; i++) {
+      for (let i = 1; i <= lineCount + 1; i++) {
         numbersText += i + '\n';
       }
       

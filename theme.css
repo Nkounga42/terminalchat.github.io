@@ -2,16 +2,18 @@
 .theme-light{
   --terminal-bg: #e4e4e4;
   --terminal-fg: #272727;
+  --terminal-bg-50: #e4e4e4;   
   --terminal-primary: rgb(147, 68, 238);
   --terminal-accent: #A594F9;
-  --terminal-secondary: #a7a7a7;
+  --terminal-secondary: #646464;
   --terminal-link:#E78F81;
   --terminal-link-hover:  rgb(129, 98, 80);
 } 
 
-:root,
+
 .theme-dark{  
   --terminal-bg: #1e1e1e;        
+  --terminal-bg-50: #1e1e1e73;        
   --terminal-fg: #f0f0f0;       
   --terminal-primary: rgb(147, 68, 238);  
   --terminal-accent: #837bd9;             
@@ -117,23 +119,31 @@
   --terminal-link-hover: #AB9DF2;
 }
 
-body::se lection{
+body::sel ection{
   background-color: var(--terminal-primary);
   color: var(--terminal-bg);
 }
 
-body{
-  /* background-color: var(--terminal-bg); */
+body{ 
+  font-family: "JetBrains Mono", monospace;
+  margin: 0;
+  overflow-y: scroll; 
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .message-content{
   margin-left: 2.4rem;
 }
-#terminal {background-color: var(--terminal-bg);
+#terminal { 
   color: var(--terminal-fg);
 }
 
 input {
+  background-color: var(--terminal-bg);
   color: var(--terminal-fg);
 }
 
@@ -141,7 +151,7 @@ input {
 .terminal-time{
   color:var(--terminal-secondary);
 }
- 
+
 .terminal-arrow{
   color: var(--terminal-accent);
 }
