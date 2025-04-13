@@ -4,9 +4,7 @@ body {
   height: 100vh;
 }
 
-.messageBox {
-  margin-bottom: 10px;
-}
+ 
 
 .app-info {
   font-size: 1.5rem;
@@ -17,6 +15,7 @@ body {
 }
 #terminal {
   /* disp lay: flex; */
+  overflow-y: auto;
   flex-direction: column;
   height: 100%;
   padding: 10px;
@@ -27,6 +26,11 @@ body {
   flex: 1;
   overflow-y: auto;
   white-space: pre-wrap;
+ 
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  
 }
 
 #input-form,
@@ -55,9 +59,13 @@ a {
  
 
 .pre-container {
-  display: flex;
   flex-direction: row;
-  width: fit-content; 
+  display: flex;
+  background: #1e1e1e;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  overflow-x: auto;
 }
 
 #line-numbers {
@@ -73,8 +81,16 @@ a {
 
 pre {
   flex-grow: 1;
-  padding: 5px;
-  white-space: pre;
+  padding: 5px; 
   font-family: monospace;
-  min-height: 100px; 
+  min-height: 100px; margin: 0;
+  white-space: pre-wrap;
 }
+input[type="text"] {
+  margin-left: .5rem;
+} 
+/* Syntax highlighting classes */
+.string { color: #ce9178; }
+.keyword { color: #569cd6; }
+.number { color: #b5cea8; }
+.comment { color: #6a9955; }

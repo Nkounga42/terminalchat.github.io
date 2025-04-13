@@ -1,4 +1,4 @@
-// Gestion du thème
+ 
 const terminal = document.getElementById("terminal");
 const arrowSpan = `<span class="terminal-arrow">>>></span>`;
 const savedTheme = ""; //localStorage.getItem('theme');
@@ -31,7 +31,7 @@ function setTheme(themeName) {
 //setTheme('red-theme')
 
 let username = ""; 
-const wsUrl = `ws://${window.location.host}/ws`; // Or similar 192.168.1.78:3000
+const wsUrl = `http://192.168.1.78:3000/Api/messages/json`; // Or similar 
 const ws = new WebSocket(wsUrl);
 const userColors = {}; 
 const colorPalette = [
@@ -118,26 +118,46 @@ ws.addEventListener("open", () => {
 });
 
 // Soumission du nom d'utilisateur
-usernameForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  if (usernameInput.value.trim() === "") return;
+usernameForm.addEventListener("submit", (event) => {
+  event.preventDefault();
 
-  username = usernameInput.value.trim();
-  ws.send(JSON.stringify({ type: "setUsername", username }));
+  const enteredUsername = usernameInput.value.trim();
+  const usernameRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]{1,18}[a-zA-Z0-9])?$/;
 
-  printLine(
-    `${arrowSpan} Bienvenue, <span style="color: ${getUserColor(
-      username
-    )}">${username}</span> !`,
-    true
-  );
-  printLine(` `);
+  if (!enteredUsername) {
+    showError("Erreur : le nom d'utilisateur ne peut pas être vide.");
+    return;
+  }
+  
+  if (!usernameRegex.test(enteredUsername) || enteredUsername.length < 3) {
+    showError(
+      "Erreur : nom d'utilisateur invalide. Utilisez entre 3 et 20 caractères (lettres, chiffres, tirets ou underscores, sans espace, sans commencer/finir par un symbole)."
+    );
+    return;
+  }else{
+
+    username = enteredUsername;
+  
+    const payload = {
+      type: "setUsername",
+      username: username,
+    };
+    ws.send(JSON.stringify(payload));
+  
+    const coloredUsername = `<span style="color: ${getUserColor(username)}">${username}</span>`;
+    printLine(`${arrowSpan} Bienvenue, ${coloredUsername} !`, true);
+  }
+  
+
 
   usernameForm.style.display = "none";
   inputForm.style.display = "flex";
   input.focus();
-  initHystory();
+
+  initHystory(); // Corrige si c'est initHistory()
 });
+
+
 
 // Envoi d'un message
 inputForm.addEventListener("submit", (e) => {
@@ -199,10 +219,8 @@ function printUserMessage(user, message, time) {
   if (!hasHTML(message)) {
     messageContent = linkify(message);
     messageBox = userSpan + timePart + `<div class='message-content'>${messageContent}</div>`;
-  } else {
-    // Échapper le HTML pour l'afficher comme texte
-    messageContent = escapeHtml(message);
-    messageBox = userSpan + timePart + `<div class='pre-container'><div id="line-numbers">1</div><pre>${formatCodeText(messageContent)}</pre></div>`;
+  } else { 
+    messageBox = userSpan + timePart + `<div class='pre-container'><div id="line-numbers">1</div><pre>${prettifyHTML(messageContent)}</pre></div>`;
   }
   
   messageBoxElement.innerHTML = messageBox;
@@ -210,14 +228,19 @@ function printUserMessage(user, message, time) {
   output.appendChild(messageBoxElement);
 }
 
-// Fonction pour échapper les caractères HTML
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+ 
+function showError(message) {
+  const terminal = document.getElementById("terminal");
+
+  // Supprime le précédent message d'erreur si présent
+  const previousError = terminal.querySelector(".error-line");
+  if (previousError) terminal.removeChild(previousError);
+
+  const errorLine = document.createElement("div");
+  errorLine.className = "error-line ";
+  errorLine.innerHTML = `${arrowSpan} <span style="color: red;">${message}</span>`;
+  output.appendChild(errorLine);
+  output.scrollTop = terminal.scrollHeight;
 }
 
 function printLine(text, isHTML = false) {
@@ -241,41 +264,67 @@ const pre = document.querySelector('pre');
 const lineNumbers = document.getElementById('line-numbers');
 
 function updateLineNumbers() {
+  // Sélectionner tous les conteneurs de message avec du code HTML
+  const preContainers = document.querySelectorAll('.pre-container');
   
-  // Compter le nombre de lignes dans le output
-  const lineCount = pre.textContent.split('\n').length;
-  
-  // Générer les numéros de ligne
-  let numbersText = '';
-  for (let i = 1; i <= lineCount; i++) {
-    numbersText += i + '\n';
-  }
-  
-  lineNumbers.textContent = numbersText ;
+  preContainers.forEach(container => {
+    const pre = container.querySelector('pre');
+    const lineNumbers = container.querySelector('#line-numbers');
+    
+    if (pre && lineNumbers) {
+      // Compter le nombre de lignes dans le pre
+      const lineCount = pre.textContent.split('\n').length;
+      
+      // Générer les numéros de ligne
+      let numbersText = '';
+      for (let i = 1; i <= lineCount; i++) {
+        numbersText += i + '\n';
+      }
+      
+      lineNumbers.textContent = numbersText;
+    }
+  });
 }
-function formatCodeText(text) {
-  
-  // Remplacer les doubles espaces par des espaces insécables
-  let formattedText = text.replace(/  /g, ' \u00A0');
-  
-  // Appliquer la coloration syntaxique basique (exemple)
-  formattedText = formattedText.replace(/"(.*?)"/g, '<span class="string">"$1"</span>');
-  formattedText = formattedText.replace(/\b(function|if|else|return|var|let|const)\b/g, '<span class="keyword">$1</span>');
-  
-  // Mettre à jour le contenu
-  updateLineNumbers();
-  return formattedText;
-  
-  // Mettre à jour les numéros de ligne
+function beautifyNode(node, indent = 0) {
+  const indentStr = '  '.repeat(indent);
+  let result = '';
+
+  if (node.nodeType === Node.TEXT_NODE) {
+    const trimmed = node.textContent.trim();
+    if (trimmed) {
+      result += indentStr + trimmed + '\n';
+    }
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
+    const tagName = node.tagName.toLowerCase();
+    const attrs = [...node.attributes].map(attr => `${attr.name}="${attr.value}"`).join(' ');
+    const openTag = attrs ? `<${tagName} ${attrs}>` : `<${tagName}>`;
+    result += indentStr + openTag + '\n';
+
+    node.childNodes.forEach(child => {
+      result += beautifyNode(child, indent + 1);
+    });
+
+    result += indentStr + `</${tagName}>\n`;
+  }
+
+  return result;
 }
 
-// Observer les changements dans l'output pour mettre à jour automatiquement
-// const observer = new MutationObserver(updateLineNumbers);
-// observer.observe(document.getElementById('output'), {
-//   childList: true,
-//   subtree: true,
-//   characterData: true
-// });
+function prettifyHTML(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  const body = doc.body;
+
+  let result = '';
+  body.childNodes.forEach(child => {
+    result += beautifyNode(child);
+  });
+
+  return result.trim();
+}
+ 
+
+ 
 
  
 updateLineNumbers();

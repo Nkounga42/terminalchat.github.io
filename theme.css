@@ -1,3 +1,4 @@
+
 .theme-light{
   --terminal-bg: #e4e4e4;
   --terminal-fg: #272727;
@@ -8,6 +9,7 @@
   --terminal-link-hover:  rgb(129, 98, 80);
 } 
 
+:root,
 .theme-dark{  
   --terminal-bg: #1e1e1e;        
   --terminal-fg: #f0f0f0;       
@@ -115,24 +117,26 @@
   --terminal-link-hover: #AB9DF2;
 }
 
-body::selection{
+body::se lection{
   background-color: var(--terminal-primary);
   color: var(--terminal-bg);
 }
 
+body{
+  /* background-color: var(--terminal-bg); */
+}
 
 .message-content{
   margin-left: 2.4rem;
 }
-#terminal {
-  background-color: var(--terminal-bg);
+#terminal {background-color: var(--terminal-bg);
   color: var(--terminal-fg);
 }
 
 input {
   color: var(--terminal-fg);
 }
- 
+
 .text-secondaire,
 .terminal-time{
   color:var(--terminal-secondary);

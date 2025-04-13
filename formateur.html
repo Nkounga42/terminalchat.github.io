@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML Prettifier (fonction)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      padding: 2rem;
+    }
+
+    textarea, pre {
+      width: 100%;
+      background-color: #282828;
+      color: #ebdbb2;
+      border: 1px solid #444;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      background-color: #fabd2f;
+      color: #282828;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #fe8019;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>HTML Prettifier (fonction personnalisable)</h1>
+  <textarea id="htmlInput" placeholder="Colle ici ton code HTML non formaté..."></textarea>
+  <button onclick="runPrettify()">Reformater</button>
+  <pre id="output"></pre>
+
+  <script>
+    function beautifyNode(node, indent = 0) {
+      const indentStr = '  '.repeat(indent);
+      let result = '';
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        const trimmed = node.textContent.trim();
+        if (trimmed) {
+          result += indentStr + trimmed + '\n';
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName.toLowerCase();
+        const attrs = [...node.attributes].map(attr => `${attr.name}="${attr.value}"`).join(' ');
+        const openTag = attrs ? `<${tagName} ${attrs}>` : `<${tagName}>`;
+        result += indentStr + openTag + '\n';
+
+        node.childNodes.forEach(child => {
+          result += beautifyNode(child, indent + 1);
+        });
+
+        result += indentStr + `</${tagName}>\n`;
+      }
+
+      return result;
+    }
+
+    function prettifyHTML(htmlString) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, 'text/html');
+      const body = doc.body;
+
+      let result = '';
+      body.childNodes.forEach(child => {
+        result += beautifyNode(child);
+      });
+
+      return result.trim();
+    }
+
+    // Exemple d'utilisation sur bouton
+    function runPrettify() {
+      const input = document.getElementById('htmlInput').value;
+      const formatted = prettifyHTML(input);
+      document.getElementById('output').textContent = formatted;
+    }
+
+    // ➕ Tu peux aussi l'utiliser comme ça :
+     const propre = prettifyHTML("<div class='pre-container'><div class='line-numbers'>${lineNumbers}</div><pre>${formattedHTML}</pre></div>");
+     console.log(propre);
+  </script>
+
+</body>
+</html>
